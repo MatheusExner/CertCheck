@@ -63,7 +63,16 @@ namespace MyApp
             foreach (string certRaiz in arqs)
             {
                 X509Certificate2 certAutoridadeRaiz = new X509Certificate2(@certRaiz);
-                string numeroSerialRaiz = certAutoridadeRaiz.SerialNumber;
+                string numeroExtensaoRaiz = "";
+                foreach (var extensao in certAutoridadeRaiz.Extensions)
+                {
+                    if (extensao.Oid.FriendlyName == "Subject Key Identifier" || extensao.Oid.FriendlyName == "Identificador da Chave de Requerente")
+                    {
+                        X509SubjectKeyIdentifierExtension ext = (X509SubjectKeyIdentifierExtension)extensao;
+                        numeroExtensaoRaiz = ext.SubjectKeyIdentifier;
+                    }
+                }
+
                 X509Chain chCa = new X509Chain();
                 chCa.ChainPolicy.RevocationMode = X509RevocationMode.Online; //Verificação online da CRL
                 chCa.Build(certAutoridadeRaiz);
@@ -76,17 +85,25 @@ namespace MyApp
                         ch.Build(cert);
                         foreach (X509ChainElement element in ch.ChainElements)
                         {
-                            certValido = (numeroSerialRaiz == element.Certificate.SerialNumber);
-                            if (certValido)
+                            
+                            foreach (var extensao in element.Certificate.Extensions)
                             {
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine("AC Raiz confiável.");
-                                Console.WriteLine("Impressão digital: {0}", element.Certificate.Thumbprint);
-                                Console.WriteLine("Requerente: {0}", element.Certificate.Subject);
-                                Console.WriteLine("Caminho do certificado: {0}", certRaiz);
-                                Console.WriteLine();
-                                Console.ForegroundColor = ConsoleColor.White;
-                                break;
+                                if (extensao.Oid.FriendlyName == "Subject Key Identifier" || extensao.Oid.FriendlyName == "Identificador da Chave de Requerente")
+                                {
+                                    X509SubjectKeyIdentifierExtension ext = (X509SubjectKeyIdentifierExtension)extensao;
+                                    certValido = numeroExtensaoRaiz == ext.SubjectKeyIdentifier;
+                                    if (certValido)
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine("AC Raiz confiável.");
+                                        Console.WriteLine("Identificador da Chave de Requerente: {0}", numeroExtensaoRaiz);
+                                        Console.WriteLine("Requerente: {0}", element.Certificate.Subject);
+                                        Console.WriteLine("Caminho do certificado: {0}", certRaiz);
+                                        Console.WriteLine();
+                                        Console.ForegroundColor = ConsoleColor.White;
+                                        break;
+                                    }
+                                }
                             }
                         }
                     }
@@ -132,13 +149,13 @@ namespace MyApp
                     Console.WriteLine("Valido a partir de: {0}", element.Certificate.NotBefore);
                     Console.WriteLine("Valido até: {0}", element.Certificate.NotAfter);
                     Console.WriteLine("Número de extensões: {0}{1}", element.Certificate.Extensions.Count, Environment.NewLine);
-                    if (element.Certificate.Extensions.Count > 0)
-                    {
-                        foreach (var extensao in element.Certificate.Extensions)
-                        {
-                            //Console.WriteLine("Oid: {0}:{1}", extensao.Oid.Value, extensao.Oid.FriendlyName);
-                        }
-                    }
+                    //if (element.Certificate.Extensions.Count > 0)
+                    //{
+                    //    foreach (var extensao in element.Certificate.Extensions) Listar as extensões
+                    //    {
+                    //        //Console.WriteLine("Oid: {0}:{1}", extensao.Oid.Value, extensao.Oid.FriendlyName);
+                    //    }
+                    //}
 
                     if (ch.ChainStatus.Length > 1)
                     {
