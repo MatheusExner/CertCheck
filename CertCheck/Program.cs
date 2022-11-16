@@ -116,7 +116,7 @@ namespace MyApp
                 Console.WriteLine("=======================================");
                 Console.WriteLine("Emissor: {0}", cert.Issuer);
                 Console.WriteLine("Requerente: {0}", cert.Subject);
-                Console.WriteLine("Number of chain elements: {0}", ch.ChainElements.Count);
+                Console.WriteLine("Número de certificados na cadeia de certificados: {0}", ch.ChainElements.Count);
                 Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine("=======================================");
